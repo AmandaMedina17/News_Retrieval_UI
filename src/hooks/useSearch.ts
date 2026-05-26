@@ -7,7 +7,7 @@ interface UseSearchReturn {
   news: NewsItem[];
   isLoading: boolean;
   hasSearched: boolean;
-  handleSearch: () => Promise<void>;
+  handleSearch: (searchQuery?: string) => Promise<void>;
 }
 
 export function useSearch(): UseSearchReturn {
@@ -16,30 +16,31 @@ export function useSearch(): UseSearchReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const handleSearch = useCallback(async () => {
-    if (!query.trim()) return;
-
+  const handleSearch = useCallback(async (searchQuery?: string) => {
+    const finalQuery = (searchQuery ?? query).trim();
+    if (!finalQuery.trim()) return;
     setIsLoading(true);
     setHasSearched(true);
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:5000/search/sparse?q=${encodeURIComponent(query)}&k=10`,
+        `http://127.0.0.1:5000/hybrid/web?q=${encodeURIComponent(finalQuery)}&k=12`,
       );
       const data = await response.json();
+      
+      const articles = data.results || [];
 
-      const newsItems: NewsItem[] = data.map((item: any) => ({
+      const newsItems: NewsItem[] = articles.map((item: any) => ({
         id: item.id,
         title: item.title,
         source: item.source,
-        date: item.date,
-        excerpt: item.excerpt,
+        date: item.published_date,   
+        excerpt: item.snippet,        
         url: item.url,
-        type: "normal" as const,
-        relevance: Math.round((item.relevance || 0) * 100),
-        imageUrl: undefined,
+        imageUrl: undefined,         
+        type: "normal",              
+        relevance: item.score,  
       }));
-
       setNews(newsItems);
     } catch (error) {
       console.error("Error en la búsqueda:", error);
