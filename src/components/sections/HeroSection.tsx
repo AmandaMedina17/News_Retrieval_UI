@@ -6,7 +6,7 @@ import { categories } from "../../data/mock";
 interface HeroSectionProps {
   query: string;
   setQuery: (query: string) => void;
-  onSearch: () => void;
+  onSearch: (query: string) => void;
   isLoading: boolean;
 }
 
@@ -18,7 +18,7 @@ export function HeroSection({
 }: HeroSectionProps) {
   const handleCategoryClick = (category: string) => {
     setQuery(category);
-    setTimeout(onSearch, 100);
+    onSearch(category);
   };
 
   return (

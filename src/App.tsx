@@ -18,7 +18,7 @@ export default function App() {
         <HeroSection
           query={query}
           setQuery={setQuery}
-          onSearch={handleSearch}
+          onSearch={(term?: string) => handleSearch(term)}
           isLoading={isLoading}
         />
 

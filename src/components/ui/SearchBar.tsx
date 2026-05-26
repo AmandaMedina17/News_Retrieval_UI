@@ -5,7 +5,7 @@ import { Search } from "lucide-react";
 interface SearchBarProps {
   query: string;
   setQuery: (query: string) => void;
-  onSearch: () => void;
+  onSearch: (query: string) => void;
   isLoading: boolean;
 }
 
@@ -17,7 +17,7 @@ export function SearchBar({
 }: SearchBarProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch();
+    onSearch(query);
   };
 
   return (
