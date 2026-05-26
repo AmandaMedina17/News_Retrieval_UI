@@ -36,7 +36,7 @@ export function SearchBar({
         <button
           type="submit"
           disabled={isLoading || !query.trim()}
-          className="h-[52px] px-6 rounded-none text-sm font-semibold uppercase tracking-wide transition-all disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90"
+          className="h-[52px] px-6 rounded-none text-sm font-semibold uppercase tracking-wide transition-all bg-primary text-primary-foreground hover:bg-primary/90"
         >
           {isLoading ? (
             <span className="inline-block w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />

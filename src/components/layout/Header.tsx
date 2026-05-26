@@ -1,10 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
 import { navItems } from "../../data/mock";
 
-export function Header() {
+interface HeaderProps {
+  user?: string | null;
+  onLogout?: () => void;
+}
+
+export function Header({ user, onLogout }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -28,6 +33,23 @@ export function Header() {
               EL DIARIO <span className="text-primary">DIGITAL</span>
             </h1>
           </div>
+
+          {/* Área de usuario (solo visible en desktop y si está logueado) */}
+          {user && (
+            <div className="hidden md:flex items-center gap-4 ml-4">
+              <span className="text-sm text-muted-foreground">
+                Hola, <span className="font-medium text-foreground">{user}</span>
+              </span>
+              <button
+                onClick={onLogout}
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+                aria-label="Cerrar sesión"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Salir</span>
+              </button>
+            </div>
+          )}
         </div>
 
         <nav className="hidden md:block border-t border-border">
@@ -46,6 +68,7 @@ export function Header() {
         </nav>
       </div>
 
+      {/* Menú móvil */}
       {mobileMenuOpen && (
         <nav className="md:hidden border-t border-border bg-card">
           <ul className="divide-y divide-border">
@@ -59,6 +82,18 @@ export function Header() {
                 </a>
               </li>
             ))}
+            {/* Opción de cerrar sesión en móvil si está logueado */}
+            {user && (
+              <li>
+                <button
+                  onClick={onLogout}
+                  className="w-full text-left px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Cerrar sesión ({user})
+                </button>
+              </li>
+            )}
           </ul>
         </nav>
       )}

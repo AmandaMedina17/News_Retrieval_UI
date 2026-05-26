@@ -22,8 +22,9 @@ export function HeroSection({
   };
 
   return (
-    <section className="w-full bg-foreground text-card py-10 md:py-14">
-      <div className="max-w-4xl mx-auto px-4 text-center space-y-6">
+    <section className="relative w-full text-card py-10 md:py-14">
+      {/* Contenido por encima del overlay (el overlay ya está en App.tsx) */}
+      <div className="relative z-10 max-w-4xl mx-auto px-4 text-center space-y-6">
         <div className="space-y-3">
           <p className="text-xs uppercase tracking-widest text-card/60 font-medium">
             Buscador de noticias
