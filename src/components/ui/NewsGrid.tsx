@@ -8,9 +8,11 @@ interface NewsGridProps {
   news: NewsItem[];
   isLoading: boolean;
   hasSearched: boolean;
+  user?: string | null;
+  currentQuery?: string;
 }
 
-export function NewsGrid({ news, isLoading, hasSearched }: NewsGridProps) {
+export function NewsGrid({ news, isLoading, hasSearched, user, currentQuery }: NewsGridProps) {
   if (isLoading) {
     return (
       <div className="space-y-8">
@@ -61,7 +63,14 @@ export function NewsGrid({ news, isLoading, hasSearched }: NewsGridProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {news.map((item, index) => (
-        <NewsCard key={item.id} news={item} index={index} variant="standard" />
+        <NewsCard
+          key={item.id}
+          news={item}
+          index={index}
+          variant="standard"
+          user={user}
+          currentQuery={currentQuery}
+        />
       ))}
     </div>
   );

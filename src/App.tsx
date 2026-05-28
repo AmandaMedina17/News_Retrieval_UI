@@ -86,6 +86,8 @@ export default function App() {
                       news={news}
                       isLoading={isLoading}
                       hasSearched={hasSearched}
+                      user={user}
+                      currentQuery={query}
                     />
                   </div>
                 </section>

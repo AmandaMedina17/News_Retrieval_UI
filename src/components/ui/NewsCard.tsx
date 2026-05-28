@@ -22,30 +22,54 @@ interface NewsCardProps {
   news: NewsItem;
   index: number;
   variant?: "featured" | "standard" | "compact";
+  user?: string | null;
+  currentQuery?: string;
 }
 
-export function NewsCard({ news, index, variant = "compact" }: NewsCardProps) {
+export function NewsCard({ news, index, variant = "compact", user, currentQuery }: NewsCardProps) {
   const animationStyle = {
     animationDelay: `${index * 50}ms`,
     animation: "fadeInUp 0.4s ease-out forwards",
     opacity: 0,
   };
 
-  // Estado para like/dislike (mutuamente excluyente)
   const [reaction, setReaction] = useState<'like' | 'dislike' | null>(null);
   const [animateLike, setAnimateLike] = useState(false);
   const [animateDislike, setAnimateDislike] = useState(false);
 
+  // Función para enviar feedback al backend
+  const sendFeedback = async (rating: boolean) => {
+    if (!user) return;
+    try {
+      const response = await fetch('http://127.0.0.1:5000/feedback/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user,
+          query: currentQuery || '',
+          chunk_id: news.url,
+          chunk_content: `${news.title} - ${news.excerpt}`,
+          rating: rating
+        })
+      });
+      if (!response.ok) throw new Error('Error al enviar feedback');
+      console.log('Feedback enviado correctamente');
+    } catch (error) {
+      console.error('Error al enviar feedback:', error);
+    }
+  };
+
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Animación
     setAnimateLike(true);
     setTimeout(() => setAnimateLike(false), 200);
-    // Cambiar estado
+
     if (reaction === 'like') {
       setReaction(null);
+      // Opcional: enviar neutral (si el backend soporta eliminación)
     } else {
       setReaction('like');
+      sendFeedback(true);
     }
   };
 
@@ -53,14 +77,16 @@ export function NewsCard({ news, index, variant = "compact" }: NewsCardProps) {
     e.stopPropagation();
     setAnimateDislike(true);
     setTimeout(() => setAnimateDislike(false), 200);
+
     if (reaction === 'dislike') {
       setReaction(null);
     } else {
       setReaction('dislike');
+      sendFeedback(false);
     }
   };
 
-  // Variante destacada (sin cambios)
+  // Variante destacada
   if (variant === "featured") {
     return (
       <article
@@ -99,7 +125,7 @@ export function NewsCard({ news, index, variant = "compact" }: NewsCardProps) {
     );
   }
 
-  // Variante compacta (con like/dislike a la derecha de la fecha)
+  // Variante compacta
   if (variant === "compact") {
     return (
       <article
@@ -125,7 +151,6 @@ export function NewsCard({ news, index, variant = "compact" }: NewsCardProps) {
               <Clock className="w-3 h-3" />
               <time>{formatDate(news.date)}</time>
             </div>
-            {/* Botones like/dislike */}
             <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
               <button
                 onClick={handleLike}
@@ -148,7 +173,7 @@ export function NewsCard({ news, index, variant = "compact" }: NewsCardProps) {
     );
   }
 
-  // Variante standard (con like/dislike a la derecha de la fecha, antes de "Leer más")
+  // Variante standard
   return (
     <button
       type="button"
@@ -178,7 +203,6 @@ export function NewsCard({ news, index, variant = "compact" }: NewsCardProps) {
             <Clock className="w-3.5 h-3.5" />
             <time>{formatDate(news.date)}</time>
           </div>
-          {/* Botones like/dislike */}
           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={handleLike}
