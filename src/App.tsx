@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "./components/layout/Header";
 import { Footer } from "./components/layout/Footer";
 import { HeroSection } from "./components/sections/HeroSection";
@@ -13,26 +13,43 @@ import { RAGAnswer } from "./components/ui/RAGAnswer";
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLeaving, setIsLeaving] = useState(false);
 
-  // Estado para RAG
   const [ragAnswer, setRagAnswer] = useState<string | null>(null);
   const [ragSources, setRagSources] = useState<any[]>([]);
   const [ragLoading, setRagLoading] = useState(false);
 
   const { query, setQuery, news, isLoading: newsLoading, hasSearched, handleSearch } = useSearch();
 
-  const handleLogin = (username: string) => {
+  // Verificar sesión guardada al cargar
+  useEffect(() => {
+    const storedToken = localStorage.getItem("access_token");
+    const storedUser = localStorage.getItem("user");
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      setUser(storedUser);
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  const handleLogin = (username: string, accessToken: string) => {
+    setToken(accessToken);
+    setUser(username);
     setIsLeaving(true);
     setTimeout(() => {
       setIsLoggedIn(true);
-      setUser(username);
       setIsLeaving(false);
     }, 500);
   };
 
   const handleLogout = () => {
-    // Limpiar todo y recargar la página para resetear completamente el estado
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("user");
+    setIsLoggedIn(false);
+    setUser(null);
+    setToken(null);
+    // Recargar para resetear todo el estado de búsqueda
     window.location.reload();
   };
 
@@ -66,10 +83,7 @@ export default function App() {
 
   return (
     <>
-      <div
-        className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${bgUrl})` }}
-      >
+      <div className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${bgUrl})` }}>
         <div className="absolute inset-0 bg-black/60" />
       </div>
 
@@ -90,24 +104,22 @@ export default function App() {
                   isLoading={isSearching}
                 />
 
-                <section className="w-full bg-muted py-10 md:py-14 mt-0 rounded-t-lg shadow-inner">
+                <section className="w-full bg-transparent py-10 md:py-14 mt-0">
                   <div className="max-w-7xl mx-auto px-4">
                     {hasSearched && (
-                      <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
-                        <h2 className="font-serif text-xl md:text-2xl font-bold text-foreground">
+                      <div className="mb-6 flex items-center justify-between border-b border-white/20 pb-4">
+                        <h2 className="font-serif text-xl md:text-2xl font-bold text-white">
                           Resultados: <span className="text-primary">{query}</span>
                         </h2>
                         {!newsLoading && news.length > 0 && (
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-sm text-white/70">
                             {news.length} {news.length === 1 ? "artículo encontrado" : "artículos encontrados"}
                           </span>
                         )}
                       </div>
                     )}
 
-                    {showRAG && (
-                      <RAGAnswer answer={ragAnswer} sources={ragSources} isLoading={ragLoading} />
-                    )}
+                    {showRAG && <RAGAnswer answer={ragAnswer} sources={ragSources} isLoading={ragLoading} />}
 
                     <NewsGrid
                       news={news}
@@ -115,6 +127,7 @@ export default function App() {
                       hasSearched={hasSearched}
                       user={user}
                       currentQuery={query}
+                      token={token}
                     />
                   </div>
                 </section>

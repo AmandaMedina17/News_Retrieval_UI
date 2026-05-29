@@ -10,9 +10,10 @@ interface NewsGridProps {
   hasSearched: boolean;
   user?: string | null;
   currentQuery?: string;
+  token?: string | null;
 }
 
-export function NewsGrid({ news, isLoading, hasSearched, user, currentQuery }: NewsGridProps) {
+export function NewsGrid({ news, isLoading, hasSearched, user, currentQuery, token }: NewsGridProps) {
   if (isLoading) {
     return (
       <div className="space-y-8">
@@ -70,6 +71,7 @@ export function NewsGrid({ news, isLoading, hasSearched, user, currentQuery }: N
           variant="standard"
           user={user}
           currentQuery={currentQuery}
+          token={token}
         />
       ))}
     </div>
