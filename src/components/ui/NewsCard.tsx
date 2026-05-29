@@ -178,7 +178,7 @@ export function NewsCard({ news, index, variant = "compact", user, currentQuery 
     <button
       type="button"
       onClick={() => news.url && window.open(news.url, "_blank")}
-      className="group flex flex-col h-full w-full text-left bg-card border border-border overflow-hidden hover:shadow-md hover:border-primary transition-all cursor-pointer p-4"
+      className="group flex flex-col h-full w-full text-left bg-card border border-border overflow-hidden hover:shadow-md transition-all cursor-pointer p-4 rounded-lg shadow-sm"
       style={animationStyle}
     >
       <h3 className="font-serif text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">

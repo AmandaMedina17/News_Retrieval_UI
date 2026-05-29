@@ -8,13 +8,19 @@ import { NewsGrid } from "./components/ui/NewsGrid";
 import { AuthCard } from "./components/sections/AuthCard";
 import { useSearch } from "./hooks/useSearch";
 import fondo from "./components/sections/periodico.jpg";
+import { RAGAnswer } from "./components/ui/RAGAnswer";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<string | null>(null);
   const [isLeaving, setIsLeaving] = useState(false);
 
-  const { query, setQuery, news, isLoading, hasSearched, handleSearch } = useSearch();
+  // Estado para RAG
+  const [ragAnswer, setRagAnswer] = useState<string | null>(null);
+  const [ragSources, setRagSources] = useState<any[]>([]);
+  const [ragLoading, setRagLoading] = useState(false);
+
+  const { query, setQuery, news, isLoading: newsLoading, hasSearched, handleSearch } = useSearch();
 
   const handleLogin = (username: string) => {
     setIsLeaving(true);
@@ -26,15 +32,40 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUser(null);
+    // Limpiar todo y recargar la página para resetear completamente el estado
+    window.location.reload();
+  };
+
+  const orchestratedSearch = async (searchTerm?: string) => {
+    const finalQuery = (searchTerm ?? query).trim();
+    if (!finalQuery) return;
+
+    setQuery(finalQuery);
+    setRagAnswer(null);
+    setRagSources([]);
+    setRagLoading(true);
+
+    try {
+      const response = await fetch(`http://127.0.0.1:5000/rag/?q=${encodeURIComponent(finalQuery)}&k=5`);
+      if (!response.ok) throw new Error(`RAG error: ${response.status}`);
+      const data = await response.json();
+      setRagAnswer(data.answer);
+      setRagSources(data.sources || []);
+    } catch (err) {
+      console.error("Error en RAG:", err);
+      setRagAnswer("No se pudo generar la respuesta automática.");
+    } finally {
+      setRagLoading(false);
+      await handleSearch(finalQuery);
+    }
   };
 
   const bgUrl = fondo && typeof fondo === "object" && "src" in fondo ? fondo : fondo;
+  const isSearching = ragLoading || newsLoading;
+  const showRAG = ragLoading || ragAnswer !== null;
 
   return (
     <>
-      {/* Fondo fijo con imagen y overlay */}
       <div
         className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${bgUrl})` }}
@@ -42,14 +73,9 @@ export default function App() {
         <div className="absolute inset-0 bg-black/60" />
       </div>
 
-      {/* Contenido principal */}
       <div className="relative z-10">
         {!isLoggedIn ? (
-          <div
-            className={`flex min-h-screen items-center justify-center px-4 py-12 transition-all duration-500 ease-out ${
-              isLeaving ? "opacity-0 scale-95" : "opacity-100 scale-100"
-            }`}
-          >
+          <div className={`flex min-h-screen items-center justify-center px-4 py-12 transition-all duration-500 ease-out ${isLeaving ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}>
             <AuthCard onLogin={handleLogin} />
           </div>
         ) : (
@@ -60,31 +86,32 @@ export default function App() {
                 <HeroSection
                   query={query}
                   setQuery={setQuery}
-                  onSearch={(term?: string) => handleSearch(term)}
-                  isLoading={isLoading}
+                  onSearch={orchestratedSearch}
+                  isLoading={isSearching}
                 />
 
-                {/* Sección de noticias con fondo blanco */}
-                <section className="w-full bg-muted py-10 md:py-14 mt-0 rounded-t-lg">
+                <section className="w-full bg-muted py-10 md:py-14 mt-0 rounded-t-lg shadow-inner">
                   <div className="max-w-7xl mx-auto px-4">
                     {hasSearched && (
                       <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
                         <h2 className="font-serif text-xl md:text-2xl font-bold text-foreground">
                           Resultados: <span className="text-primary">{query}</span>
                         </h2>
-                        {!isLoading && news.length > 0 && (
+                        {!newsLoading && news.length > 0 && (
                           <span className="text-sm text-muted-foreground">
-                            {news.length}{" "}
-                            {news.length === 1
-                              ? "artículo encontrado"
-                              : "artículos encontrados"}
+                            {news.length} {news.length === 1 ? "artículo encontrado" : "artículos encontrados"}
                           </span>
                         )}
                       </div>
                     )}
+
+                    {showRAG && (
+                      <RAGAnswer answer={ragAnswer} sources={ragSources} isLoading={ragLoading} />
+                    )}
+
                     <NewsGrid
                       news={news}
-                      isLoading={isLoading}
+                      isLoading={newsLoading}
                       hasSearched={hasSearched}
                       user={user}
                       currentQuery={query}
@@ -99,13 +126,8 @@ export default function App() {
       </div>
 
       <style>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeInUp {
-          animation: fadeInUp 0.4s ease-out forwards;
-        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fadeInUp { animation: fadeInUp 0.4s ease-out forwards; }
       `}</style>
     </>
   );
