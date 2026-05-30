@@ -32,9 +32,9 @@ export function RAGAnswer({ answer, sources, isLoading }: RAGAnswerProps) {
   // Respuesta lista → mostrar cuadro completo
   return (
     <div className="mb-8 bg-card border border-border rounded-xl shadow-md overflow-hidden transition-shadow hover:shadow-lg">
-      <div className="bg-primary/10 px-4 py-2 border-b border-border flex items-center gap-2">
-        <Sparkles className="w-4 h-4 text-primary" />
-        <span className="text-xs font-semibold uppercase tracking-wide text-primary">
+      <div className="bg-primary-dark px-4 py-2 border-b border-border flex items-center gap-2">
+        <Sparkles className="w-4 h-4 text-white" />
+        <span className="text-xs font-semibold uppercase tracking-wide text-white">
           Respuesta inteligente
         </span>
       </div>

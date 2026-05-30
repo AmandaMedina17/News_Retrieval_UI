@@ -9,6 +9,7 @@ import { AuthCard } from "./components/sections/AuthCard";
 import { useSearch } from "./hooks/useSearch";
 import fondo from "./components/sections/periodico.jpg";
 import { RAGAnswer } from "./components/ui/RAGAnswer";
+import { RecommendationsGrid } from "./components/ui/RecommendationGrid";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -103,6 +104,11 @@ export default function App() {
                   onSearch={orchestratedSearch}
                   isLoading={isSearching}
                 />
+                {!hasSearched && user && token && (
+                  <div className="w-full px-4 max-w-7xl mx-auto">
+                    <RecommendationsGrid user={user} token={token} />
+                  </div>
+                )}
 
                 <section className="w-full bg-transparent py-10 md:py-14 mt-0">
                   <div className="max-w-7xl mx-auto px-4">

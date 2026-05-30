@@ -180,14 +180,14 @@ export function NewsCard({ news, index, variant = "compact", user, currentQuery,
     <button
       type="button"
       onClick={() => news.url && window.open(news.url, "_blank")}
-      className="group flex flex-col h-full w-full text-left bg-transparent border border-white/20 overflow-hidden hover:border-white/40 transition-all cursor-pointer p-4 rounded-lg shadow-sm"
+      className="group flex flex-col h-full w-full text-left bg-card border border-border overflow-hidden hover:shadow-md transition-all cursor-pointer p-4 rounded-lg shadow-sm"
       style={animationStyle}
     >
-      <h3 className="font-serif text-lg font-bold text-white mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">
+      <h3 className="font-serif text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">
         {news.title}
       </h3>
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs font-medium text-white uppercase tracking-wide">
+        <span className="text-xs font-medium text-primary uppercase tracking-wide">
           {news.source}
         </span>
         {news.type !== "normal" && (
@@ -196,11 +196,11 @@ export function NewsCard({ news, index, variant = "compact", user, currentQuery,
           </span>
         )}
       </div>
-      <p className="text-white/70 text-sm mb-3 line-clamp-3 leading-relaxed flex-1">
+      <p className="text-muted-foreground text-sm mb-3 line-clamp-3 leading-relaxed flex-1">
         {news.excerpt}
       </p>
-      <div className="flex items-center justify-between pt-3 border-t border-white/20 mt-auto">
-        <div className="flex items-center gap-3 text-white/60 text-xs">
+      <div className="flex items-center justify-between pt-3 border-t border-border mt-auto">
+        <div className="flex items-center gap-3 text-muted-foreground text-xs">
           <div className="flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5" />
             <time>{formatDate(news.date)}</time>
@@ -208,21 +208,21 @@ export function NewsCard({ news, index, variant = "compact", user, currentQuery,
           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={handleLike}
-              className={`transition-transform ${animateLike ? 'scale-125' : ''} ${reaction === 'like' ? 'text-green-400' : 'text-white/60'} hover:text-green-400`}
+              className={`transition-transform ${animateLike ? 'scale-125' : ''} ${reaction === 'like' ? 'text-green-400' : 'text-muted-foreground'} hover:text-green-500`}
               aria-label="Me gusta"
             >
               <ThumbsUp className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={handleDislike}
-              className={`transition-transform ${animateDislike ? 'scale-125' : ''} ${reaction === 'dislike' ? 'text-red-400' : 'text-white/60'} hover:text-red-400`}
+              className={`transition-transform ${animateDislike ? 'scale-125' : ''} ${reaction === 'dislike' ? 'text-red-400' : 'text-muted-foreground'} hover:text-red-500`}
               aria-label="No me gusta"
             >
               <ThumbsDown className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
-        <span className="flex items-center gap-1 text-white text-xs font-medium group-hover:text-primary transition-colors">
+        <span className="flex items-center gap-1 text-foreground text-xs font-medium group-hover:text-primary transition-colors">
           Leer más
           <ArrowRight className="w-3 h-3" />
         </span>

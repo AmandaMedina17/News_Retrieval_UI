@@ -23,6 +23,8 @@
   
   --color-opinion: oklch(0.5 0.12 220);
   --color-feature: oklch(0.45 0.18 25);
+  --color-primary-dark: oklch(0.38 0.18 25);
+
 }
 
 @keyframes fadeInUp {
