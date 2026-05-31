@@ -8,7 +8,7 @@ export function Footer() {
               EL DIARIO <span className="text-primary">DIGITAL</span>
             </h3>
             <p className="text-sm text-card/60 leading-relaxed">
-              Tu fuente confiable de informacion.
+              Tu fuente confiable de información.
             </p>
           </div>
         </div>

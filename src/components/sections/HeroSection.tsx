@@ -30,7 +30,7 @@ export function HeroSection({
             Buscador de noticias
           </p>
           <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-card text-balance leading-tight">
-            Encuentra la informacion que necesitas
+            Encuentra la información que necesitas
           </h2>
           <p className="text-card/70 text-base md:text-lg max-w-2xl mx-auto">
             Accede a miles de noticias de fuentes verificadas. Resultados

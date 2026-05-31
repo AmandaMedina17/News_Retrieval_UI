@@ -6,10 +6,10 @@ import { Footer } from "./components/layout/Footer";
 import { HeroSection } from "./components/sections/HeroSection";
 import { NewsGrid } from "./components/ui/NewsGrid";
 import { AuthCard } from "./components/sections/AuthCard";
-import { useSearch } from "./hooks/useSearch";
 import fondo from "./components/sections/periodico.jpg";
 import { RAGAnswer } from "./components/ui/RAGAnswer";
 import { RecommendationsGrid } from "./components/ui/RecommendationGrid";
+import type { NewsItem } from "./types";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -17,11 +17,16 @@ export default function App() {
   const [token, setToken] = useState<string | null>(null);
   const [isLeaving, setIsLeaving] = useState(false);
 
+  // Estados para búsqueda
+  const [query, setQuery] = useState("");
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [newsLoading, setNewsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  // Estados para RAG
   const [ragAnswer, setRagAnswer] = useState<string | null>(null);
   const [ragSources, setRagSources] = useState<any[]>([]);
   const [ragLoading, setRagLoading] = useState(false);
-
-  const { query, setQuery, news, isLoading: newsLoading, hasSearched, handleSearch } = useSearch();
 
   // Verificar sesión guardada al cargar
   useEffect(() => {
@@ -50,31 +55,53 @@ export default function App() {
     setIsLoggedIn(false);
     setUser(null);
     setToken(null);
-    // Recargar para resetear todo el estado de búsqueda
     window.location.reload();
   };
 
+  // Búsqueda unificada: solo llama a /rag
   const orchestratedSearch = async (searchTerm?: string) => {
     const finalQuery = (searchTerm ?? query).trim();
     if (!finalQuery) return;
 
     setQuery(finalQuery);
+    setHasSearched(true);
     setRagAnswer(null);
     setRagSources([]);
     setRagLoading(true);
+    setNewsLoading(true);
+    setNews([]);
 
     try {
-      const response = await fetch(`http://127.0.0.1:5000/rag/?q=${encodeURIComponent(finalQuery)}&k=5`);
-      if (!response.ok) throw new Error(`RAG error: ${response.status}`);
+      const response = await fetch(
+        `http://127.0.0.1:5000/rag/?q=${encodeURIComponent(finalQuery)}&k=12`
+      );
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
+
+      // Respuesta RAG
       setRagAnswer(data.answer);
       setRagSources(data.sources || []);
+
+      // Convertir los sources (resultados de búsqueda) a NewsItem
+      const newsItems: NewsItem[] = (data.sources || []).map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        source: item.source,
+        date: item.published_date,
+        excerpt: item.snippet,
+        url: item.url,
+        imageUrl: undefined,
+        type: "normal",
+        relevance: item.score,
+      }));
+      setNews(newsItems);
     } catch (err) {
-      console.error("Error en RAG:", err);
+      console.error("Error en la búsqueda:", err);
       setRagAnswer("No se pudo generar la respuesta automática.");
+      setNews([]);
     } finally {
       setRagLoading(false);
-      await handleSearch(finalQuery);
+      setNewsLoading(false);
     }
   };
 
@@ -84,13 +111,20 @@ export default function App() {
 
   return (
     <>
-      <div className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url(${bgUrl})` }}>
+      <div
+        className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${bgUrl})` }}
+      >
         <div className="absolute inset-0 bg-black/60" />
       </div>
 
       <div className="relative z-10">
         {!isLoggedIn ? (
-          <div className={`flex min-h-screen items-center justify-center px-4 py-12 transition-all duration-500 ease-out ${isLeaving ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}>
+          <div
+            className={`flex min-h-screen items-center justify-center px-4 py-12 transition-all duration-500 ease-out ${
+              isLeaving ? "opacity-0 scale-95" : "opacity-100 scale-100"
+            }`}
+          >
             <AuthCard onLogin={handleLogin} />
           </div>
         ) : (
@@ -104,6 +138,7 @@ export default function App() {
                   onSearch={orchestratedSearch}
                   isLoading={isSearching}
                 />
+
                 {!hasSearched && user && token && (
                   <div className="w-full px-4 max-w-7xl mx-auto">
                     <RecommendationsGrid user={user} token={token} />
@@ -119,13 +154,22 @@ export default function App() {
                         </h2>
                         {!newsLoading && news.length > 0 && (
                           <span className="text-sm text-white/70">
-                            {news.length} {news.length === 1 ? "artículo encontrado" : "artículos encontrados"}
+                            {news.length}{" "}
+                            {news.length === 1
+                              ? "artículo encontrado"
+                              : "artículos encontrados"}
                           </span>
                         )}
                       </div>
                     )}
 
-                    {showRAG && <RAGAnswer answer={ragAnswer} sources={ragSources} isLoading={ragLoading} />}
+                    {showRAG && (
+                      <RAGAnswer
+                        answer={ragAnswer}
+                        sources={ragSources}
+                        isLoading={ragLoading}
+                      />
+                    )}
 
                     <NewsGrid
                       news={news}
