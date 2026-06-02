@@ -105,7 +105,7 @@ export default function App() {
     setNews([]);
 
     try {
-      const response = await fetch(`${config.apiBaseUrl}/rag/?q=${encodeURIComponent(finalQuery)}&k=12`);
+      const response = await fetch(`${config.apiBaseUrl}/rag/?q=${encodeURIComponent(finalQuery)}&k=${config.searchLimit}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setRagAnswer(data.answer);
