@@ -10,6 +10,7 @@ import fondo from "./components/sections/periodico.jpg";
 import { RAGAnswer } from "./components/ui/RAGAnswer";
 import { RecommendationsGrid } from "./components/ui/RecommendationGrid";
 import type { NewsItem } from "./types";
+import { config } from "./config";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -27,6 +28,9 @@ export default function App() {
   const [ragAnswer, setRagAnswer] = useState<string | null>(null);
   const [ragSources, setRagSources] = useState<any[]>([]);
   const [ragLoading, setRagLoading] = useState(false);
+
+  const [isRefined, setIsRefined] = useState(false); // nuevo
+
 
   // Verificar sesión guardada al cargar
   useEffect(() => {
@@ -58,7 +62,36 @@ export default function App() {
     window.location.reload();
   };
 
-  // Búsqueda unificada: solo llama a /rag
+  // Refinamiento automático cuando el usuario da like
+  const handleRefine = async (originalQuery: string, chunkContent: string) => {
+    if (!originalQuery || !chunkContent) return;
+    console.log("Refinando con:", originalQuery, chunkContent);
+    try {
+      const refineResponse = await fetch(`${config.apiBaseUrl}/feedback/refine`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          original_query: originalQuery,
+          chunk_contents: [chunkContent],
+        }),
+      });
+      const refineData = await refineResponse.json();
+      console.log("Respuesta del refinamiento:", refineData);
+      if (!refineResponse.ok) throw new Error("Error en refinamiento");
+      const expandedQuery = refineData.expanded_query;
+      if (expandedQuery) {
+        console.log("Consulta expandida:", expandedQuery);
+        setQuery(expandedQuery);
+        setIsRefined(true);
+      } else {
+        console.warn("No se recibió expanded_query");
+      }
+    } catch (err) {
+      console.error("Error refining query:", err);
+    }
+  };
+
+  // Búsqueda normal o refinada (cuando se pulsa el botón)
   const orchestratedSearch = async (searchTerm?: string) => {
     const finalQuery = (searchTerm ?? query).trim();
     if (!finalQuery) return;
@@ -72,17 +105,11 @@ export default function App() {
     setNews([]);
 
     try {
-      const response = await fetch(
-        `http://127.0.0.1:5000/rag/?q=${encodeURIComponent(finalQuery)}&k=12`
-      );
+      const response = await fetch(`${config.apiBaseUrl}/rag/?q=${encodeURIComponent(finalQuery)}&k=12`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-
-      // Respuesta RAG
       setRagAnswer(data.answer);
       setRagSources(data.sources || []);
-
-      // Convertir los sources (resultados de búsqueda) a NewsItem
       const newsItems: NewsItem[] = (data.sources || []).map((item: any) => ({
         id: item.id,
         title: item.title,
@@ -103,7 +130,16 @@ export default function App() {
       setRagLoading(false);
       setNewsLoading(false);
     }
+    // Después de buscar, la consulta ya no se considera "refinada" (el botón vuelve a "Buscar")
+    setIsRefined(false);
   };
+
+  // Para cuando el usuario modifique manualmente el input, reseteamos el flag
+  const handleQueryChange = (newQuery: string) => {
+    setQuery(newQuery);
+    if (isRefined) setIsRefined(false);
+  };
+
 
   const bgUrl = fondo && typeof fondo === "object" && "src" in fondo ? fondo : fondo;
   const isSearching = ragLoading || newsLoading;
@@ -134,7 +170,7 @@ export default function App() {
               <main className="flex-1">
                 <HeroSection
                   query={query}
-                  setQuery={setQuery}
+                  setQuery={handleQueryChange}
                   onSearch={orchestratedSearch}
                   isLoading={isSearching}
                 />
@@ -178,6 +214,7 @@ export default function App() {
                       user={user}
                       currentQuery={query}
                       token={token}
+                      onRefine={handleRefine}
                     />
                   </div>
                 </section>

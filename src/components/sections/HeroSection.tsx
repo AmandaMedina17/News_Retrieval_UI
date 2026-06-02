@@ -8,6 +8,7 @@ interface HeroSectionProps {
   setQuery: (query: string) => void;
   onSearch: (query: string) => void;
   isLoading: boolean;
+  isRefined?: boolean;
 }
 
 export function HeroSection({
@@ -15,6 +16,7 @@ export function HeroSection({
   setQuery,
   onSearch,
   isLoading,
+  isRefined = false,
 }: HeroSectionProps) {
   const handleCategoryClick = (category: string) => {
     setQuery(category);
@@ -44,6 +46,7 @@ export function HeroSection({
             setQuery={setQuery}
             onSearch={onSearch}
             isLoading={isLoading}
+            buttonText={isRefined ? "Refinar búsqueda" : "Buscar"}
           />
         </div>
 

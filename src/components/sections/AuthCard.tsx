@@ -12,6 +12,8 @@ import {
   Mail,
   User as UserIcon,
 } from "lucide-react";
+import { config } from "./../../config/index";
+
 
 type AuthMode = "login" | "register";
 
@@ -91,14 +93,17 @@ export function AuthCard({ onLogin }: AuthCardProps) {
       if (!validateLogin()) return;
       setIsLoading(true);
       try {
-        const response = await fetch("http://127.0.0.1:5000/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            username: formData.username,
-            password: formData.password,
-          }).toString(),
-        });
+        const response = await fetch(
+          `${config.apiBaseUrl}/auth/login`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              username: formData.username,
+              password: formData.password,
+            }).toString(),
+          },
+        );
         const data = await response.json();
         if (!response.ok) throw new Error(data.detail || "Error en login");
         // Guardar token en localStorage y llamar al callback
@@ -114,16 +119,19 @@ export function AuthCard({ onLogin }: AuthCardProps) {
       if (!validateRegister()) return;
       setIsLoading(true);
       try {
-        const response = await fetch("http://127.0.0.1:5000/auth/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: formData.username,
-            password_hash: formData.password, // el backend debería hashearla
-            email: formData.email || undefined,
-            full_name: formData.full_name || undefined,
-          }),
-        });
+        const response = await fetch(
+          `${config.apiBaseUrl}/auth/register`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username: formData.username,
+              password_hash: formData.password, // el backend debería hashearla
+              email: formData.email || undefined,
+              full_name: formData.full_name || undefined,
+            }),
+          },
+        );
         const data = await response.json();
         if (!response.ok) throw new Error(data.detail || "Error en registro");
         setMode("login");
@@ -183,14 +191,21 @@ export function AuthCard({ onLogin }: AuthCardProps) {
 
           <div
             className="relative overflow-hidden transition-all duration-300"
-            style={{ height: containerHeight ? `${containerHeight}px` : "auto" }}
+            style={{
+              height: containerHeight ? `${containerHeight}px` : "auto",
+            }}
           >
             <div
               className="flex transition-transform duration-300 ease-in-out"
-              style={{ transform: `translateX(${mode === "login" ? "0%" : "-100%"})` }}
+              style={{
+                transform: `translateX(${mode === "login" ? "0%" : "-100%"})`,
+              }}
             >
               {/* Panel Login */}
-              <div ref={loginPanelRef} className="w-full flex-shrink-0 p-6 md:p-8">
+              <div
+                ref={loginPanelRef}
+                className="w-full flex-shrink-0 p-6 md:p-8"
+              >
                 <h2 className="font-serif text-2xl font-bold text-foreground mb-6">
                   Bienvenido de nuevo
                 </h2>
@@ -212,7 +227,9 @@ export function AuthCard({ onLogin }: AuthCardProps) {
                       />
                     </div>
                     {errors.username && (
-                      <p className="text-xs text-destructive mt-1">{errors.username}</p>
+                      <p className="text-xs text-destructive mt-1">
+                        {errors.username}
+                      </p>
                     )}
                   </div>
 
@@ -236,16 +253,24 @@ export function AuthCard({ onLogin }: AuthCardProps) {
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                       >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                     {errors.password && (
-                      <p className="text-xs text-destructive mt-1">{errors.password}</p>
+                      <p className="text-xs text-destructive mt-1">
+                        {errors.password}
+                      </p>
                     )}
                   </div>
 
                   {loginError && (
-                    <p className="text-sm text-destructive text-center">{loginError}</p>
+                    <p className="text-sm text-destructive text-center">
+                      {loginError}
+                    </p>
                   )}
 
                   <button
@@ -269,7 +294,10 @@ export function AuthCard({ onLogin }: AuthCardProps) {
               </div>
 
               {/* Panel Registro */}
-              <div ref={registerPanelRef} className="w-full flex-shrink-0 p-6 md:p-8">
+              <div
+                ref={registerPanelRef}
+                className="w-full flex-shrink-0 p-6 md:p-8"
+              >
                 <h2 className="font-serif text-2xl font-bold text-foreground mb-6">
                   Crear cuenta nueva
                 </h2>
@@ -290,7 +318,11 @@ export function AuthCard({ onLogin }: AuthCardProps) {
                         disabled={isLoading}
                       />
                     </div>
-                    {errors.username && <p className="text-xs text-destructive mt-1">{errors.username}</p>}
+                    {errors.username && (
+                      <p className="text-xs text-destructive mt-1">
+                        {errors.username}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -313,10 +345,18 @@ export function AuthCard({ onLogin }: AuthCardProps) {
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                       >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
-                    {errors.password && <p className="text-xs text-destructive mt-1">{errors.password}</p>}
+                    {errors.password && (
+                      <p className="text-xs text-destructive mt-1">
+                        {errors.password}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -336,16 +376,30 @@ export function AuthCard({ onLogin }: AuthCardProps) {
                       />
                       <button
                         type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                       >
-                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showConfirmPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
-                    {errors.confirmPassword && <p className="text-xs text-destructive mt-1">{errors.confirmPassword}</p>}
+                    {errors.confirmPassword && (
+                      <p className="text-xs text-destructive mt-1">
+                        {errors.confirmPassword}
+                      </p>
+                    )}
                   </div>
 
-                  {errors.general && <p className="text-sm text-destructive text-center">{errors.general}</p>}
+                  {errors.general && (
+                    <p className="text-sm text-destructive text-center">
+                      {errors.general}
+                    </p>
+                  )}
 
                   <button
                     type="submit"
@@ -358,7 +412,9 @@ export function AuthCard({ onLogin }: AuthCardProps) {
 
                 <div className="mt-6 p-3 bg-muted/30 border border-border rounded-md">
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Con tu registro podemos ofrecerte una experiencia personalizada con recomendaciones según tus búsquedas e interacciones.
+                    Con tu registro podemos ofrecerte una experiencia
+                    personalizada con recomendaciones según tus búsquedas e
+                    interacciones.
                   </p>
                 </div>
               </div>

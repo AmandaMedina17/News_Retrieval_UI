@@ -11,9 +11,10 @@ interface NewsGridProps {
   user?: string | null;
   currentQuery?: string;
   token?: string | null;
+  onRefine?: (originalQuery: string, chunkContent: string) => void;
 }
 
-export function NewsGrid({ news, isLoading, hasSearched, user, currentQuery, token }: NewsGridProps) {
+export function NewsGrid({ news, isLoading, hasSearched, user, currentQuery, token, onRefine }: NewsGridProps) {
   if (isLoading) {
     return (
       <div className="space-y-8">
@@ -72,6 +73,7 @@ export function NewsGrid({ news, isLoading, hasSearched, user, currentQuery, tok
           user={user}
           currentQuery={currentQuery}
           token={token}
+          onRefine={onRefine}
         />
       ))}
     </div>

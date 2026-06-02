@@ -4,9 +4,10 @@
 import { useEffect, useState } from "react";
 import { NewsCard } from "./NewsCard";
 import type { NewsItem } from "../../types";
+import { config } from "./../../config/index";
 
 interface RecommendationsGridProps {
-  user: string | null;   // solo para mostrar el nombre, no se envía al backend
+  user: string | null; // solo para mostrar el nombre, no se envía al backend
   token: string | null;
 }
 
@@ -25,9 +26,10 @@ export function RecommendationsGrid({ user, token }: RecommendationsGridProps) {
       setIsLoading(true);
       setError(null);
       try {
-        const url = "http://127.0.0.1:5000/recommend/for-user?max_results=10&include_likes=true&include_queries=true&query_weight=0.3";
-
-        const response = await fetch(url, {
+        
+        const response = await fetch(          
+        `${config.apiBaseUrl}/recommend/for-user?max_results=10&include_likes=true&include_queries=true&query_weight=0.3`, 
+          {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -39,7 +41,7 @@ export function RecommendationsGrid({ user, token }: RecommendationsGridProps) {
         }
 
         const data = await response.json();
-        console.log("📦 Recomendaciones recibidas:", data); 
+        console.log("📦 Recomendaciones recibidas:", data);
 
         const newsItems: NewsItem[] = data.recommended_docs.map((doc: any) => ({
           id: doc.id,
@@ -72,7 +74,10 @@ export function RecommendationsGrid({ user, token }: RecommendationsGridProps) {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white/10 border border-white/20 rounded-lg p-4 animate-pulse h-48" />
+            <div
+              key={i}
+              className="bg-white/10 border border-white/20 rounded-lg p-4 animate-pulse h-48"
+            />
           ))}
         </div>
       </div>
@@ -87,7 +92,9 @@ export function RecommendationsGrid({ user, token }: RecommendationsGridProps) {
     return (
       <div className="mb-10 text-center text-white/60">
         <p>Aún no hay recomendaciones personalizadas.</p>
-        <p className="text-sm">Da like a noticias o realiza búsquedas para recibir sugerencias.</p>
+        <p className="text-sm">
+          Da like a noticias o realiza búsquedas para recibir sugerencias.
+        </p>
       </div>
     );
   }

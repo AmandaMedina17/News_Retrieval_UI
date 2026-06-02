@@ -1,6 +1,7 @@
 "use client";
 
 import { Sparkles, Loader2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface RAGAnswerProps {
   answer: string | null;
@@ -40,9 +41,16 @@ export function RAGAnswer({ answer, sources, isLoading }: RAGAnswerProps) {
       </div>
       <div className="p-4">
         <div className="prose prose-sm max-w-none text-foreground mb-3">
-          {answer.split('\n').map((paragraph, i) => (
-            <p key={i} className="text-sm leading-relaxed">{paragraph}</p>
-          ))}
+          {/* Renderizar Markdown */}
+          <ReactMarkdown
+            components={{
+              // Personalizar elementos Markdown (opcional)
+              strong: ({ children }) => <strong className="font-bold text-primary">{children}</strong>,
+              p: ({ children }) => <p className="text-sm leading-relaxed mb-2">{children}</p>,
+            }}
+          >
+            {answer}
+          </ReactMarkdown>
         </div>
         {sources.length > 0 && (
           <details className="text-xs text-muted-foreground mt-2">
@@ -52,7 +60,12 @@ export function RAGAnswer({ answer, sources, isLoading }: RAGAnswerProps) {
             <ul className="mt-2 space-y-1 pl-4">
               {sources.map((src, idx) => (
                 <li key={idx}>
-                  <a href={src.url} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
+                  <a
+                    href={src.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-primary"
+                  >
                     {src.title} – {src.source}
                   </a>
                 </li>
