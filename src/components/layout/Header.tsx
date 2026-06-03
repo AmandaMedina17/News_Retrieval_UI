@@ -51,21 +51,6 @@ export function Header({ user, onLogout }: HeaderProps) {
             </div>
           )}
         </div>
-
-        <nav className="hidden md:block border-t border-border">
-          <ul className="flex items-center justify-center gap-8 py-3">
-            {navItems.map((item) => (
-              <li key={item.label}>
-                <a
-                  href={item.href}
-                  className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                >
-                  {item.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
       </div>
 
       {/* Menú móvil */}

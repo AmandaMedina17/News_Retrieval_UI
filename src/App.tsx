@@ -29,8 +29,9 @@ export default function App() {
   const [ragSources, setRagSources] = useState<any[]>([]);
   const [ragLoading, setRagLoading] = useState(false);
 
-  const [isRefined, setIsRefined] = useState(false); // nuevo
-
+  // Estados para refinamiento
+  const [refinedQuery, setRefinedQuery] = useState<string | null>(null);
+  const [hasLiked, setHasLiked] = useState(false);
 
   // Verificar sesión guardada al cargar
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function App() {
     window.location.reload();
   };
 
-  // Refinamiento automático cuando el usuario da like
+  // Refinamiento cuando el usuario da like
   const handleRefine = async (originalQuery: string, chunkContent: string) => {
     if (!originalQuery || !chunkContent) return;
     console.log("Refinando con:", originalQuery, chunkContent);
@@ -81,8 +82,8 @@ export default function App() {
       const expandedQuery = refineData.expanded_query;
       if (expandedQuery) {
         console.log("Consulta expandida:", expandedQuery);
-        setQuery(expandedQuery);
-        setIsRefined(true);
+        setRefinedQuery(expandedQuery);
+        setHasLiked(true);
       } else {
         console.warn("No se recibió expanded_query");
       }
@@ -91,12 +92,15 @@ export default function App() {
     }
   };
 
-  // Búsqueda normal o refinada (cuando se pulsa el botón)
+  // Búsqueda normal (con la consulta actual de la barra)
   const orchestratedSearch = async (searchTerm?: string) => {
     const finalQuery = (searchTerm ?? query).trim();
     if (!finalQuery) return;
 
-    setQuery(finalQuery);
+    // Actualizamos el estado de la barra solo si se usó el término original (cuando no es refinado)
+    if (!searchTerm || searchTerm === query) {
+      setQuery(finalQuery);
+    }
     setHasSearched(true);
     setRagAnswer(null);
     setRagSources([]);
@@ -105,7 +109,7 @@ export default function App() {
     setNews([]);
 
     try {
-      const response = await fetch(`${config.apiBaseUrl}/rag/?q=${encodeURIComponent(finalQuery)}&k=${config.searchLimit}&${user ? `user_id=${encodeURIComponent(user)}&` : ""}`);
+      const response = await fetch(`${config.apiBaseUrl}/rag/?q=${encodeURIComponent(finalQuery)}&k=${config.searchLimit}${user ? `&user_id=${encodeURIComponent(user)}` : ""}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setRagAnswer(data.answer);
@@ -130,16 +134,27 @@ export default function App() {
       setRagLoading(false);
       setNewsLoading(false);
     }
-    // Después de buscar, la consulta ya no se considera "refinada" (el botón vuelve a "Buscar")
-    setIsRefined(false);
   };
 
-  // Para cuando el usuario modifique manualmente el input, reseteamos el flag
+  // Búsqueda con la consulta refinada (el botón "Mejorar búsqueda")
+  const searchWithRefined = async () => {
+    if (refinedQuery) {
+      // Realizamos la búsqueda con la consulta refinada SIN cambiar la barra
+      await orchestratedSearch(refinedQuery);
+      // Reseteamos el estado para que el botón se deshabilite hasta nuevos likes
+      setHasLiked(false);
+      setRefinedQuery(null);
+    }
+  };
+
+  // Cuando el usuario modifica manualmente la barra, reseteamos el refinamiento
   const handleQueryChange = (newQuery: string) => {
     setQuery(newQuery);
-    if (isRefined) setIsRefined(false);
+    if (hasLiked) {
+      setHasLiked(false);
+      setRefinedQuery(null);
+    }
   };
-
 
   const bgUrl = fondo && typeof fondo === "object" && "src" in fondo ? fondo : fondo;
   const isSearching = ragLoading || newsLoading;
@@ -174,6 +189,28 @@ export default function App() {
                   onSearch={orchestratedSearch}
                   isLoading={isSearching}
                 />
+
+                {/* Cartel de sugerencia y botón de mejora */}
+                {hasSearched && (
+                  <div className="w-full px-4 max-w-7xl mx-auto mt-2 mb-4">
+                    <div className="bg-transparent backdrop-blur-sm border border-white rounded-lg p-3 flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-white text-sm">
+                        💡 Si deseas mejorar tu búsqueda, da "like" o "dislike" a las noticias.
+                      </p>
+                      <button
+                        onClick={searchWithRefined}
+                        disabled={!hasLiked || !refinedQuery}
+                        className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                          hasLiked && refinedQuery
+                            ? "bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
+                            : "bg-gray-500 text-gray-300 cursor-not-allowed opacity-50"
+                        }`}
+                      >
+                        Mejorar búsqueda
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {!hasSearched && user && token && (
                   <div className="w-full px-4 max-w-7xl mx-auto">
