@@ -28,7 +28,7 @@ export function RecommendationsGrid({ user, token }: RecommendationsGridProps) {
       try {
         
         const response = await fetch(          
-        `${config.apiBaseUrl}/recommend/for-user?max_results=10&include_likes=true&include_queries=true&query_weight=0.3`, 
+        `${config.apiBaseUrl}/recommend/for-user?max_results=10&include_likes=true&include_queries=true&query_weight=0.3&${user ? `user_id=${encodeURIComponent(user)}` : ""}`, 
           {
           method: "GET",
           headers: {
