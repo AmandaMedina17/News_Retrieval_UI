@@ -97,7 +97,6 @@ export default function App() {
     const finalQuery = (searchTerm ?? query).trim();
     if (!finalQuery) return;
 
-    // Actualizamos el estado de la barra solo si se usó el término original (cuando no es refinado)
     if (!searchTerm || searchTerm === query) {
       setQuery(finalQuery);
     }
@@ -109,7 +108,12 @@ export default function App() {
     setNews([]);
 
     try {
-      const response = await fetch(`${config.apiBaseUrl}/rag/?q=${encodeURIComponent(finalQuery)}&k=${config.searchLimit}${user ? `&user_id=${encodeURIComponent(user)}` : ""}`);
+      // Construir URL sin user_id si el usuario es Invitado
+      let url = `${config.apiBaseUrl}/rag/?q=${encodeURIComponent(finalQuery)}&k=${config.searchLimit}`;
+      if (user && user !== "Invitado") {
+        url += `&user_id=${encodeURIComponent(user)}`;
+      }
+      const response = await fetch(url);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setRagAnswer(data.answer);

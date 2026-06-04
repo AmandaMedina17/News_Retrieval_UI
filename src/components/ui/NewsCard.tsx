@@ -60,7 +60,7 @@ export function NewsCard({
         method: "POST",
         headers,
         body: JSON.stringify({
-          user_id: user,
+          user_id: user === "Invitado" ? null : user,  // ← Invitado envía null
           query: currentQuery || "",
           chunk_id: news.url,
           chunk_content: `${news.title} - ${news.excerpt}`,
