@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { NewsCard } from "./NewsCard";
 import type { NewsItem } from "../../types";
-import { config } from "./../../config/index";
+import { config } from "../../config/config";
 
 interface RecommendationsGridProps {
   user: string | null; // solo para mostrar el nombre, no se envía al backend

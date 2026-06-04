@@ -5,7 +5,7 @@ import { cn } from "../../utils/cn";
 import { typeStyles, typeLabels } from "../../data/mock";
 import type { NewsItem } from "../../types";
 import { useState } from "react";
-import { config } from "../../config";
+import { config } from "../../config/config";
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);

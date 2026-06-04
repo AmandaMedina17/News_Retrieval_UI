@@ -10,7 +10,7 @@ import fondo from "./components/sections/periodico.jpg";
 import { RAGAnswer } from "./components/ui/RAGAnswer";
 import { RecommendationsGrid } from "./components/ui/RecommendationGrid";
 import type { NewsItem } from "./types";
-import { config } from "./config";
+import { config } from "./config/config";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
