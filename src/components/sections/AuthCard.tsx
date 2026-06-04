@@ -12,7 +12,7 @@ import {
   Mail,
   User as UserIcon,
 } from "lucide-react";
-import { config } from "./../../config/index";
+import { config } from "../../config/config";
 
 
 type AuthMode = "login" | "register";

@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import type { NewsItem } from "../types";
-import { config } from "../config";
+import { config } from "../config/config";
 
 interface UseSearchReturn {
   query: string;
