@@ -1,0 +1,15 @@
+services:
+  frontend:
+    build: .
+    container_name: sri_frontend_dev
+    ports:
+      - "${VITE_FRONTEND_PORT:-5173}:5173"       
+    env_file:
+      - .env                                      
+    environment:
+      - VITE_BACKEND_URL=${VITE_BACKEND_URL:-http://localhost:8000}
+    volumes:
+      - .:/app                                  
+      - /app/node_modules
+    stdin_open: true
+    tty: true
