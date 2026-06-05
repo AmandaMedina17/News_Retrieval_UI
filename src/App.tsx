@@ -29,9 +29,10 @@ export default function App() {
   const [ragSources, setRagSources] = useState<any[]>([]);
   const [ragLoading, setRagLoading] = useState(false);
 
-  // Estados para refinamiento
-  const [refinedQuery, setRefinedQuery] = useState<string | null>(null);
+  // Estados para refinamiento (acumulador de likes)
+  const [likedChunks, setLikedChunks] = useState<string[]>([]);
   const [hasLiked, setHasLiked] = useState(false);
+  const [isRefining, setIsRefining] = useState(false);
 
   // Verificar sesión guardada al cargar
   useEffect(() => {
@@ -63,40 +64,75 @@ export default function App() {
     window.location.reload();
   };
 
-  // Refinamiento cuando el usuario da like
-  const handleRefine = async (originalQuery: string, chunkContent: string) => {
-    if (!originalQuery || !chunkContent) return;
-    console.log("Refinando con:", originalQuery, chunkContent);
+  // Cuando el usuario da like: acumulamos el contenido y habilitamos botón
+  const handleLikeFeedback = (chunkContent: string) => {
+    setLikedChunks(prev => [...prev, chunkContent]);
+    setHasLiked(true);
+  };
+
+  // Refinamiento al hacer clic en el botón "Mejorar búsqueda"
+  const refineAndSearch = async () => {
+    if (likedChunks.length === 0 || isRefining) return;
+
+    // Activar estados de carga 
+    setIsRefining(true);
+    setHasSearched(true);
+    setRagAnswer(null);
+    setRagSources([]);
+    setRagLoading(true);
+    setNewsLoading(true);
+    setNews([]);
+
     try {
-      const refineResponse = await fetch(`${config.apiBaseUrl}/feedback/refine`, {
+      const response = await fetch(`${config.apiBaseUrl}/feedback/refine`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          original_query: originalQuery,
-          chunk_contents: [chunkContent],
+          original_query: query,
+          chunk_contents: likedChunks,
         }),
       });
-      const refineData = await refineResponse.json();
-      console.log("Respuesta del refinamiento:", refineData);
-      if (!refineResponse.ok) throw new Error("Error en refinamiento");
-      const expandedQuery = refineData.expanded_query;
-      if (expandedQuery) {
-        console.log("Consulta expandida:", expandedQuery);
-        setRefinedQuery(expandedQuery);
-        setHasLiked(true);
-      } else {
-        console.warn("No se recibió expanded_query");
-      }
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+
+      // data tiene la forma RAGResponseSchema: { query, answer, sources }
+      setRagAnswer(data.answer);
+      setRagSources(data.sources || []);
+
+      // Convertir sources a NewsItem[]
+      const newsItems: NewsItem[] = (data.sources || []).map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        source: item.source,
+        date: item.published_date,
+        excerpt: item.snippet,
+        url: item.url,
+        imageUrl: undefined,
+        type: "normal",
+        relevance: item.score,
+      }));
+      setNews(newsItems);
+
     } catch (err) {
-      console.error("Error refining query:", err);
+      console.error("Error en refinamiento:", err);
+      setRagAnswer("No se pudo mejorar la búsqueda.");
+      setNews([]);
+    } finally {
+      setRagLoading(false);
+      setNewsLoading(false);
+      setLikedChunks([]);
+      setHasLiked(false);
+      setIsRefining(false);
     }
   };
 
-  // Búsqueda normal (con la consulta actual de la barra)
+  // Búsqueda normal (con la consulta actual de la barra o la expandida)
   const orchestratedSearch = async (searchTerm?: string) => {
     const finalQuery = (searchTerm ?? query).trim();
     if (!finalQuery) return;
 
+    // Si el término es diferente al de la barra, no actualizamos la barra (búsqueda refinada)
     if (!searchTerm || searchTerm === query) {
       setQuery(finalQuery);
     }
@@ -140,23 +176,12 @@ export default function App() {
     }
   };
 
-  // Búsqueda con la consulta refinada (el botón "Mejorar búsqueda")
-  const searchWithRefined = async () => {
-    if (refinedQuery) {
-      // Realizamos la búsqueda con la consulta refinada SIN cambiar la barra
-      await orchestratedSearch(refinedQuery);
-      // Reseteamos el estado para que el botón se deshabilite hasta nuevos likes
-      setHasLiked(false);
-      setRefinedQuery(null);
-    }
-  };
-
   // Cuando el usuario modifica manualmente la barra, reseteamos el refinamiento
   const handleQueryChange = (newQuery: string) => {
     setQuery(newQuery);
-    if (hasLiked) {
+    if (hasLiked || likedChunks.length > 0) {
+      setLikedChunks([]);
       setHasLiked(false);
-      setRefinedQuery(null);
     }
   };
 
@@ -199,18 +224,29 @@ export default function App() {
                   <div className="w-full px-4 max-w-7xl mx-auto mt-2 mb-4">
                     <div className="bg-transparent backdrop-blur-sm border border-white rounded-lg p-3 flex flex-wrap items-center justify-between gap-3">
                       <p className="text-white text-sm">
-                        💡 Si deseas mejorar tu búsqueda, da "like" o "dislike" a las noticias.
+                        ⚖️ Valore la relevancia de los artículos mediante el botón de aprobación.
+                        Sus valoraciones se emplearán para refinar los resultados de búsqueda.
                       </p>
                       <button
-                        onClick={searchWithRefined}
-                        disabled={!hasLiked || !refinedQuery}
-                        className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                          hasLiked && refinedQuery
+                        onClick={refineAndSearch}
+                        disabled={!hasLiked || likedChunks.length === 0 || isRefining}
+                        className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                          hasLiked && likedChunks.length > 0 && !isRefining
                             ? "bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
                             : "bg-gray-500 text-gray-300 cursor-not-allowed opacity-50"
                         }`}
                       >
-                        Mejorar búsqueda
+                        {isRefining ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Optimizando...
+                          </>
+                        ) : (
+                          "Optimizar consulta"
+                        )}
                       </button>
                     </div>
                   </div>
@@ -255,7 +291,7 @@ export default function App() {
                       user={user}
                       currentQuery={query}
                       token={token}
-                      onRefine={handleRefine}
+                      onLike={handleLikeFeedback}
                     />
                   </div>
                 </section>

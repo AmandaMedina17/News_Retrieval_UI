@@ -27,6 +27,7 @@ interface NewsCardProps {
   currentQuery?: string;
   token?: string | null;
   onRefine?: (originalQuery: string, chunkContent: string) => void;
+  onLike?: (chunkContent: string) => void;
 }
 
 export function NewsCard({
@@ -37,6 +38,7 @@ export function NewsCard({
   currentQuery,
   token,
   onRefine,
+  onLike,
 }: NewsCardProps) {
   const animationStyle = {
     animationDelay: `${index * 50}ms`,
@@ -83,9 +85,9 @@ export function NewsCard({
     } else {
       setReaction("like");
       sendFeedback(true);
-      // Refinar búsqueda si existe la función y hay consulta actual
-      if (onRefine && currentQuery) {
-        onRefine(currentQuery, news.excerpt);
+      if (onLike) {
+        const contentForRefine = `${news.title} - ${news.excerpt || ""}`;
+        onLike(contentForRefine);
       }
     }
   };
